@@ -1,5 +1,6 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = ' '
+vim.g.autowriteall = "true"
 local keymap = vim.keymap.set
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
@@ -16,6 +17,26 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
+  {
+    "lewis6991/gitsigns.nvim",
+    opts = {
+      -- See `:help gitsigns.txt`
+      signs = {
+        add = { text = '+' },
+        change = { text = '~' },
+        delete = { text = '_' },
+        topdelete = { text = '‾' },
+        changedelete = { text = '~' },
+      },
+    },
+  },
+  {
+    "tpope/vim-fugitive",
+    config = function()
+      keymap("n", "<leader>gi", ":Git<CR>")
+      keymap("n", "<leader>gl", ":Gclog<CR>")
+    end
+  },
   -- {
   --   "dense-analysis/ale",
   --   config = function()
@@ -26,7 +47,7 @@ require("lazy").setup({
   --     vim.g.ale_fix_on_save = 1
   --   end,
   -- },
-  
+
   {
     "williamboman/mason.nvim",
     build = "vim.cmd(':MasonUpdate')", -- :MasonUpdate updates registry contents
@@ -47,25 +68,98 @@ require("lazy").setup({
     "neovim/nvim-lspconfig",
     dependencies = "williamboman/mason-lspconfig.nvim",
     config = function ()
+      require'lspconfig'.bashls.setup{}
 
-      -- require'lspconfig'.terraformls.setup{}
-      -- vim.api.nvim_create_autocmd({"BufWritePre"}, {
-      --   pattern = {"*.tf", "*.tfvars"},
-      --   callback = function()
-      --     vim.lsp.buf.format()
-      --   end,
-      -- })
+      --Enable (broadcasting) snippet capability for completion
+      local capabilities = vim.lsp.protocol.make_client_capabilities()
+      capabilities.textDocument.completion.completionItem.snippetSupport = true
 
-      -- require'lspconfig'.tflint.setup{}
-      -- nvim_create_namespace(vim.cmd.bufnr)
-      -- vim.diagnostic.show()
+      require'lspconfig'.html.setup {
+        capabilities = capabilities,
+      }
+      local htmlGroup = vim.api.nvim_create_augroup('FormatHtml', { clear = true })
+      vim.api.nvim_create_autocmd({"BufWritePre"}, {
+        group = htmlGroup,
+        pattern = {"*.html"},
+        callback = function()
+          vim.lsp.buf.format{
+            filter = function(client) return client.name == "html" end
+          }
+        end,
+      })
+
+      require'lspconfig'.cssls.setup {
+        capabilities = capabilities,
+      }
+      local cssGroup = vim.api.nvim_create_augroup('FormatCss', { clear = true })
+      vim.api.nvim_create_autocmd({"BufWritePre"}, {
+        group = cssGroup,
+        pattern = {"*.css"},
+        callback = function()
+          vim.lsp.buf.format{
+            filter = function(client) return client.name == "cssls" end
+          }
+        end,
+      })
+
+
+      require'lspconfig'.quick_lint_js.setup{}
+
+      vim.filetype.add({
+        pattern = {
+          [".*%.github/workflows/.*%.yml"] = "gh-actions",
+          [".*%.github/workflows/.*%.yaml"] = "gh-actions",
+        },
+      })
+      -- require'lspconfig'.actionlint.setup{
+      --   cmd = { "actionlint" },
+      --   filetypes = { "gh-actions" },
+      --   -- root_dir = 
+      -- }
+
+      require'lspconfig'.lua_ls.setup {
+        settings = {
+          Lua = {
+            runtime = {
+              -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
+              version = 'LuaJIT',
+            },
+            diagnostics = {
+              -- Get the language server to recognize the `vim` global
+              globals = {'vim'},
+            },
+            workspace = {
+              -- Make the server aware of Neovim runtime files
+              library = vim.api.nvim_get_runtime_file("", true),
+            },
+            -- Do not send telemetry data containing a randomized but unique identifier
+            telemetry = {
+              enable = false,
+            },
+          },
+        },
+      }
+
+      require'lspconfig'.terraformls.setup{}
+      vim.api.nvim_create_autocmd({"BufWritePre"}, {
+        pattern = {"*.tf", "*.tfvars"},
+        callback = function()
+          vim.lsp.buf.format{
+            filter = function(client) return client.name == "terraformls" end
+          }
+        end,
+      })
+
+      require'lspconfig'.tflint.setup{}
 
     end,
   },
 
   {
     "nvim-treesitter/nvim-treesitter",
-    build = "vim.cmd(':TSUpdate')",
+    build = function()
+      vim.cmd(':TSUpdate')
+    end,
     config = function()
       require'nvim-treesitter.configs'.setup {
         ensure_installed = {
@@ -103,6 +197,8 @@ require("lazy").setup({
           additional_vim_regex_highlighting = false,
         },
       }
+      vim.treesitter.language.add("terraform", { filetype = "terraform-vars" })
+      vim.treesitter.language.add("yaml", { filetype = "gh-actions" })
     end
   },
 
@@ -142,6 +238,31 @@ require("lazy").setup({
     config = function()
       vim.g.neo_tree_remove_legacy_commands = 1
       keymap("n", "<leader>e", ":Neotree toggle reveal left<CR>")
+      -- local neotreeOpen = vim.api.nvim_create_augroup('OpenNeotree', { clear = true })
+      -- vim.api.nvim_create_autocmd({"BufAdd"}, {
+      --   group = htmlGroup,
+      --   pattern = {"*.html"},
+      --   callback = function()
+      --     vim.lsp.buf.format{
+      --       filter = function(client) return client.name == "html" end
+      --     }
+      --   end,
+      -- })
+      -- keymap("n", "<leader>e", function()
+      --   -- vim.w.neoTreeBuffer = 
+      --   -- code
+      -- end)
+
+      local htmlGroup = vim.api.nvim_create_augroup('FormatHtml', { clear = true })
+      vim.api.nvim_create_autocmd({"BufWritePre"}, {
+        group = htmlGroup,
+        pattern = {"*.html"},
+        callback = function()
+          vim.lsp.buf.format{
+            filter = function(client) return client.name == "html" end
+          }
+        end,
+      })
     end
   },
 
@@ -149,9 +270,17 @@ require("lazy").setup({
 
   {
     "nvim-lualine/lualine.nvim",
-    config = function()
-      require('lualine').setup()
-    end,
+    opts = {
+      options = {
+        icons_enabled = false,
+        theme = 'onedark',
+        component_separators = '|',
+        section_separators = '',
+      },
+    },
+    -- config = function()
+    --   require('lualine').setup()
+    -- end,
   },
 
   {
@@ -265,6 +394,26 @@ require("lazy").setup({
 }, {})
 
 
+-- vim.api.nvim_buf_create_user_command(vim.bufnr, 'Format', function(_)
+--   vim.lsp.buf.format()
+-- end, { desc = 'Format current buffer with LSP' })
+
+-- [[ Highlight on yank ]]
+-- See `:help vim.highlight.on_yank()`
+local highlight_group = vim.api.nvim_create_augroup('YankHighlight', { clear = true })
+vim.api.nvim_create_autocmd('TextYankPost', {
+  callback = function()
+    vim.highlight.on_yank()
+  end,
+  group = highlight_group,
+  pattern = '*',
+})
+
+-- copy to system clipboard
+keymap("v", "<leader>y", '"+y')
+-- paste from system clipboard
+keymap("v", "<leader>p", '"+p')
+
 -- do not copy symbol deleted via x
 keymap("n", "x", '"_x')
 
@@ -278,9 +427,14 @@ keymap("n", "N", "Nzz")
 
 -- split windows
 keymap("n", "<leader>sh", "<C-w>s")
+keymap("n", "<leader>sH", ":bo split<cr>")
 keymap("n", "<leader>sv", "<C-w>v")
+keymap("n", "<leader>sV", ":bo vsplit<cr>")
 keymap("n", "<leader>se", "<C-w>=")
-keymap("n", "<leader>sx", ":close<CR>")
+keymap("n", "<leader>sq", ":q<CR>")
+keymap("n", "<leader>sQ", ":q!<CR>")
+keymap("n", "<leader>sx", ":bd<CR>")
+keymap("n", "<leader>sX", ":bd!<CR>")
 vim.opt.splitright = true
 vim.splitbelow = true
 
@@ -291,10 +445,11 @@ keymap("n", "<leader>tp", ":tabp<CR>")
 keymap("n", "<leader>tx", ":tabclose<CR>")
 
 -- terminal
-keymap("n", "<leader>tv", "<C-w>v:term<cr>")
-keymap("n", "<leader>th", "<C-w>s:term<cr>")
+-- keymap("n", "<leader>tv", "<C-w>v:term<cr>")
+keymap("n", "<leader>tv", ":bo :vsplit<cr>:term<cr>")
+keymap("n", "<leader>th", ":bo :split<cr>:term<cr>")
 keymap("t", "<Esc>", "<C-\\><C-N>")
-keymap("t", "<leader>tx", "<C-\\><C-N>:q<cr>")
+-- keymap("t", "<leader>tx", "<C-\\><C-N>:q<cr>")
 vim.api.nvim_create_autocmd({"TermOpen"}, {
   callback = function()
     vim.cmd("startinsert")
@@ -311,60 +466,15 @@ vim.opt.guicursor = ""
 vim.opt.relativenumber = true
 vim.wo.number = true
 
---
--- vim.keymap.set("n", "n", "nzz")
--- vim.keymap.set("n", "N", "Nzz")
---
--- -- blanking cursor
--- vim.opt.guicursor = ""
---
--- vim.opt.splitright = true
--- vim.splitbelow = true
---
--- vim.keymap.set("n", "x", '"_x')
---
--- vim.opt.relativenumber = true
---
--- vim.opt.smartindent = true
---
--- vim.opt.swapfile = false
--- vim.opt.backup = false
--- -- Set <space> as the leader key
--- -- See `:help mapleader`
--- --  NOTE: Must happen before plugins are required (otherwise wrong leader will be used)
--- vim.g.mapleader = ' '
--- vim.g.maplocalleader = ' '
---
--- -- Install package manager
--- --    https://github.com/folke/lazy.nvim
--- --    `:help lazy.nvim.txt` for more info
--- local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
--- if not vim.loop.fs_stat(lazypath) then
---   vim.fn.system {
---     'git',
---     'clone',
---     '--filter=blob:none',
---     'https://github.com/folke/lazy.nvim.git',
---     '--branch=stable', -- latest stable release
---     lazypath,
---   }
--- end
--- vim.opt.rtp:prepend(lazypath)
---
--- -- NOTE: Here is where you install your plugins.
--- --  You can configure plugins using the `config` key.
--- --
--- --  You can also configure plugins after the setup call,
--- --    as they will be available in your neovim runtime.
+vim.wo.signcolumn = 'yes'
+
+vim.opt.smartindent = true
+
+vim.opt.swapfile = false
+vim.opt.backup = false
+
 -- require('lazy').setup({
 --   -- NOTE: First, some plugins that don't require any configuration
---
---   -- Git related plugins
---   {
---       'tpope/vim-fugitive',
---       version = 'v3.x'
---   },
---   'tpope/vim-rhubarb',
 --
 --   -- Detect tabstop and shiftwidth automatically
 --   {
@@ -398,40 +508,6 @@ vim.wo.number = true
 --
 --   -- Useful plugin to show you pending keybinds.
 --   { 'folke/which-key.nvim', opts = {} },
---   { -- Adds git releated signs to the gutter, as well as utilities for managing changes
---     'lewis6991/gitsigns.nvim',
---     opts = {
---       -- See `:help gitsigns.txt`
---       signs = {
---         add = { text = '+' },
---         change = { text = '~' },
---         delete = { text = '_' },
---         topdelete = { text = '‾' },
---         changedelete = { text = '~' },
---       },
---     },
---   },
---
---   { -- Theme inspired by Atom
---     'navarasu/onedark.nvim',
---     priority = 1000,
---     config = function()
---       vim.cmd.colorscheme 'onedark'
---     end,
---   },
---
---   { -- Set lualine as statusline
---     'nvim-lualine/lualine.nvim',
---     -- See `:help lualine.txt`
---     opts = {
---       options = {
---         icons_enabled = false,
---         theme = 'onedark',
---         component_separators = '|',
---         section_separators = '',
---       },
---     },
---   },
 --
 --   { -- Add indentation guides even on blank lines
 --     'lukas-reineke/indent-blankline.nvim',
@@ -443,9 +519,6 @@ vim.wo.number = true
 --     },
 --     version = 'v2.20.*',
 --   },
---
---   -- "gc" to comment visual regions/lines
---   { 'numToStr/Comment.nvim', opts = {}, version = 'v0.8.x' },
 --
 --   -- Fuzzy Finder (files, lsp, etc)
 --   { 'nvim-telescope/telescope.nvim', version = '0.1.x', dependencies = { 'nvim-lua/plenary.nvim', version = 'v0.1.x' } },
@@ -463,39 +536,12 @@ vim.wo.number = true
 --     end,
 --   },
 --
---   { -- Highlight, edit, and navigate code
---     'nvim-treesitter/nvim-treesitter',
---     dependencies = {
---       'nvim-treesitter/nvim-treesitter-textobjects',
---     },
---     build = ":TSUpdate",
---     version = 'v0.9.x',
---   },
---
---   {
---   "nvim-neo-tree/neo-tree.nvim",
---     branch = "v2.x",
---     dependencies = {
---       "nvim-lua/plenary.nvim",
---       "nvim-tree/nvim-web-devicons", -- not strictly required, but recommended
---       "MunifTanjim/nui.nvim",
---     },
---     build = ":let g:neo_tree_remove_legacy_commands = 1",
---   }
--- }, {})
---
 -- -- [[ Setting options ]]
 -- -- See `:help vim.o`
 --
--- -- Set highlight on search
--- vim.o.hlsearch = false
--- vim.o.incsearch = true
---
--- -- Make line numbers default
--- vim.wo.number = true
 --
 -- -- Enable mouse mode
--- vim.o.mouse = 'n'
+vim.o.mouse = 'nic'
 --
 -- -- Sync clipboard between OS and Neovim.
 -- --  Remove this option if you want your OS clipboard to remain independent.
@@ -503,28 +549,25 @@ vim.wo.number = true
 -- -- vim.o.clipboard = 'unnamedplus'
 --
 -- -- Enable break indent
--- vim.o.breakindent = true
+vim.o.breakindent = true
 --
 -- -- Save undo history
--- vim.o.undofile = false
+vim.o.undofile = false
 --
 -- -- Case insensitive searching UNLESS /C or capital in search
--- vim.o.ignorecase = true
--- vim.o.smartcase = true
---
--- -- Keep signcolumn on by default
--- vim.wo.signcolumn = 'yes'
---
+vim.o.ignorecase = true
+vim.o.smartcase = true
+
 -- -- Decrease update time
 -- vim.o.updatetime = 250
 -- vim.o.timeout = true
 -- vim.o.timeoutlen = 300
 --
 -- -- Set completeopt to have a better completion experience
--- vim.o.completeopt = 'menuone,noselect'
+vim.o.completeopt = 'menuone,noselect'
 --
 -- -- NOTE: You should make sure your terminal supports this
--- vim.o.termguicolors = true
+vim.o.termguicolors = true
 --
 -- -- [[ Basic Keymaps ]]
 --
@@ -536,72 +579,20 @@ vim.wo.number = true
 -- --   end
 -- -- })
 --
--- -- split windows
--- vim.keymap.set("n", "<leader>sh", "<C-w>s")
--- vim.keymap.set("n", "<leader>sv", "<C-w>v")
--- vim.keymap.set("n", "<leader>se", "<C-w>=")
--- vim.keymap.set("n", "<leader>sx", ":close<cr>")
 --
--- vim.keymap.set("n", "<leader>to", ":tabnew<cr>")
--- vim.keymap.set("n", "<leader>tx", ":tabclose<cr>")
--- vim.keymap.set("n", "<leader>tn", ":tabn<cr>")
--- vim.keymap.set("n", "<leader>tp", ":tabp<cr>")
 --
--- vim.keymap.set("n", "<leader>tv", "<C-w>v:term<cr>")
--- vim.keymap.set("n", "<leader>th", "<C-w>s:term<cr>")
--- vim.keymap.set("t", "<Esc>", "<C-\\><C-N>")
--- vim.keymap.set("t", "<leader>tx", "<C-\\><C-N>:q<cr>")
--- vim.api.nvim_create_autocmd({"TermOpen"}, {
---   callback = function()
---     vim.cmd("startinsert")
---   end
--- })
 --
--- -- move selected rows
--- vim.keymap.set("v", "J", ":m '>+1<cr>gv")
--- vim.keymap.set("v", "K", ":m '<-2<cr>gv")
 --
--- vim.keymap.set("n", "n", "nzz")
--- vim.keymap.set("n", "N", "Nzz")
---
--- vim.opt.splitright = true
--- vim.splitbelow = true
---
--- vim.keymap.set("n", "x", '"_x')
---
--- vim.opt.relativenumber = true
---
--- vim.opt.smartindent = true
---
--- vim.opt.swapfile = false
--- vim.opt.backup = false
---
--- vim.opt.scrolloff = 8
 --
 --
 -- -- Keymaps for better default experience
 -- -- See `:help vim.keymap.set()`
--- vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
+vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
 --
 -- -- Remap for dealing with word wrap
 -- vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
 -- vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
 --
--- -- [[ Highlight on yank ]]
--- -- See `:help vim.highlight.on_yank()`
--- local highlight_group = vim.api.nvim_create_augroup('YankHighlight', { clear = true })
--- vim.api.nvim_create_autocmd('TextYankPost', {
---   callback = function()
---     vim.highlight.on_yank()
---   end,
---   group = highlight_group,
---   pattern = '*',
--- })
---
---
--- -- [[ Configure Neotree ]]
--- -- see `:h neo-tree`
--- vim.keymap.set('n', '<leader>e', ':Neotree reveal toggle<cr>')
 --
 -- -- [[ Configure Telescope ]]
 -- -- See `:help telescope` and `:help telescope.setup()`
@@ -845,5 +836,6 @@ vim.wo.number = true
 --
 -- -- The line beneath this is called `modeline`. See `:help modeline`
 -- -- vim: ts=2 sts=2 sw=2 et
+--
 --
 --
