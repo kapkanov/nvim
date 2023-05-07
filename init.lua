@@ -18,6 +18,13 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
   {
+    "iamcco/markdown-preview.nvim",
+    build = function() vim.fn["mkdp#util#install"]() end,
+    config = function()
+      vim.g.mkdp_auto_close = 0
+    end
+  },
+  {
     "lewis6991/gitsigns.nvim",
     opts = {
       -- See `:help gitsigns.txt`
