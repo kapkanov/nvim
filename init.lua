@@ -75,11 +75,22 @@ require("lazy").setup({
     "neovim/nvim-lspconfig",
     dependencies = "williamboman/mason-lspconfig.nvim",
     config = function ()
+      local capabilities = require('cmp_nvim_lsp').default_capabilities()
+      keymap("n", "<leader>df", vim.lsp.buf.definition)
+      keymap("n", "<leader>dc", vim.lsp.buf.declaration)
+      -- keymap("n", '<leader>lf', function()
+      --   print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
+      -- end)
+      --
+      --   require('lspconfig')['<YOUR_LSP_SERVER>'].setup {
+      --     capabilities = capabilities
+      --   }
+
       require'lspconfig'.bashls.setup{}
 
       --Enable (broadcasting) snippet capability for completion
-      local capabilities = vim.lsp.protocol.make_client_capabilities()
-      capabilities.textDocument.completion.completionItem.snippetSupport = true
+      -- local capabilities = vim.lsp.protocol.make_client_capabilities()
+      -- capabilities.textDocument.completion.completionItem.snippetSupport = true
 
       require'lspconfig'.html.setup {
         capabilities = capabilities,
@@ -110,7 +121,9 @@ require("lazy").setup({
       })
 
 
-      require'lspconfig'.quick_lint_js.setup{}
+      require'lspconfig'.quick_lint_js.setup{
+        capabilities = capabilities,
+      }
 
       vim.filetype.add({
         pattern = {
@@ -125,6 +138,7 @@ require("lazy").setup({
       -- }
 
       require'lspconfig'.lua_ls.setup {
+        capabilities = capabilities,
         settings = {
           Lua = {
             runtime = {
@@ -147,7 +161,7 @@ require("lazy").setup({
         },
       }
 
-      require'lspconfig'.terraformls.setup{}
+      require'lspconfig'.terraformls.setup{ capabilities = capabilities, }
       vim.api.nvim_create_autocmd({"BufWritePre"}, {
         pattern = {"*.tf", "*.tfvars"},
         callback = function()
@@ -165,7 +179,7 @@ require("lazy").setup({
   {
     "nvim-treesitter/nvim-treesitter",
     build = function()
-      vim.cmd(':TSUpdate')
+      vim.cmd(":TSUpdate")
     end,
     config = function()
       require'nvim-treesitter.configs'.setup {
@@ -255,10 +269,6 @@ require("lazy").setup({
       --     }
       --   end,
       -- })
-      -- keymap("n", "<leader>e", function()
-      --   -- vim.w.neoTreeBuffer = 
-      --   -- code
-      -- end)
 
       local htmlGroup = vim.api.nvim_create_augroup('FormatHtml', { clear = true })
       vim.api.nvim_create_autocmd({"BufWritePre"}, {
@@ -285,14 +295,11 @@ require("lazy").setup({
         section_separators = '',
       },
     },
-    -- config = function()
-    --   require('lualine').setup()
-    -- end,
   },
 
   {
     "nvim-telescope/telescope.nvim",
-    branch = "0.1.1",
+    version = "*",
     dependencies = { "nvim-lua/plenary.nvim" },
     config = function()
       keymap("n", "<leader>ff", ":Telescope find_files<cr>")
@@ -303,12 +310,25 @@ require("lazy").setup({
       keymap("n", "<leader><leader>", ":Telescope buffers<cr>")
       keymap("n", "<leader>ht", ":Telescope help_tags<cr>")
       keymap("n", "<leader>ks", ":Telescope keymaps<cr>")
+      keymap('n', '<leader>di', require('telescope.builtin').diagnostics)
+      keymap("n", "<leader>/", function()
+        require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
+          winblend = 10,
+          previewer = false,
+        })
+      end)
+      -- )
     end,
   },
 
   {
     "hrsh7th/nvim-cmp",
-    dependencies = { "saadparwaiz1/cmp_luasnip" },
+    dependencies = { 
+      "saadparwaiz1/cmp_luasnip",
+      "L3MON4D3/LuaSnip",
+      "hrsh7th/cmp-nvim-lsp",
+    },
+--     dependencies = { 'hrsh7th/cmp-nvim-lsp', 'L3MON4D3/LuaSnip', 'saadparwaiz1/cmp_luasnip' },
     config = function()
       local cmp = require'cmp'
 
@@ -334,7 +354,9 @@ require("lazy").setup({
         }),
         sources = cmp.config.sources(
         {
-          -- { name = 'nvim_lsp' },
+          { name = 'nvim_lsp' },
+        },
+        {
           { name = 'luasnip' }, -- For luasnip users.
         },
         {
@@ -372,13 +394,6 @@ require("lazy").setup({
           { name = 'cmdline' }
         })
       })
-
-        -- -- Set up lspconfig.
-        -- local capabilities = require('cmp_nvim_lsp').default_capabilities()
-        -- -- Replace <YOUR_LSP_SERVER> with each lsp server you've enabled.
-        -- require('lspconfig')['<YOUR_LSP_SERVER>'].setup {
-        --   capabilities = capabilities
-        -- }
 
       vim.opt.completeopt = "menu,menuone,noselect"
 
@@ -459,6 +474,7 @@ keymap("t", "<Esc>", "<C-\\><C-N>")
 -- keymap("t", "<leader>tx", "<C-\\><C-N>:q<cr>")
 vim.api.nvim_create_autocmd({"TermOpen"}, {
   callback = function()
+    -- vim.wo.leader('')
     vim.cmd("startinsert")
   end
 })
@@ -527,8 +543,6 @@ vim.opt.backup = false
 --     version = 'v2.20.*',
 --   },
 --
---   -- Fuzzy Finder (files, lsp, etc)
---   { 'nvim-telescope/telescope.nvim', version = '0.1.x', dependencies = { 'nvim-lua/plenary.nvim', version = 'v0.1.x' } },
 --
 --   -- Fuzzy Finder Algorithm which requires local dependencies to be built.
 --   -- Only load if `make` is available. Make sure you have the system
@@ -619,21 +633,9 @@ vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
 --
 -- -- See `:help telescope.builtin`
 -- vim.keymap.set('n', '<leader>?', require('telescope.builtin').oldfiles, { desc = '[?] Find recently opened files' })
--- vim.keymap.set('n', '<leader><space>', require('telescope.builtin').buffers, { desc = '[ ] Find existing buffers' })
 -- vim.keymap.set('n', '<leader>/', function()
 --   -- You can pass additional configuration to telescope to change theme, layout, etc.
---   require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
---     winblend = 10,
---     previewer = false,
---   })
--- end, { desc = '[/] Fuzzily search in current buffer' })
 --
--- vim.keymap.set('n', '<leader>gf', require('telescope.builtin').git_files, { desc = 'Search [G]it [F]iles' })
--- vim.keymap.set('n', '<leader>sf', require('telescope.builtin').find_files, { desc = '[S]earch [F]iles' })
--- vim.keymap.set('n', '<leader>h', require('telescope.builtin').help_tags, { desc = 'Search [H]elp' })
--- vim.keymap.set('n', '<leader>sw', require('telescope.builtin').grep_string, { desc = '[S]earch current [W]ord' })
--- vim.keymap.set('n', '<leader>sg', require('telescope.builtin').live_grep, { desc = '[S]earch by [G]rep' })
--- vim.keymap.set('n', '<leader>sd', require('telescope.builtin').diagnostics, { desc = '[S]earch [D]iagnostics' })
 --
 -- -- [[ Configure Treesitter ]]
 -- -- See `:help nvim-treesitter`
@@ -727,7 +729,6 @@ vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
 --   nmap('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
 --   nmap('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction')
 --
---   nmap('gd', vim.lsp.buf.definition, '[G]oto [D]efinition')
 --   nmap('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
 --   nmap('gI', vim.lsp.buf.implementation, '[G]oto [I]mplementation')
 --   nmap('<leader>D', vim.lsp.buf.type_definition, 'Type [D]efinition')
