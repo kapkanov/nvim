@@ -69,16 +69,11 @@ require("lazy").setup({
 				filetype = filetypesFormat,
 			})
 
-			-- local htmlGroup = vim.api.nvim_create_augroup('FormatHtml', { clear = true })
-			-- vim.api.nvim_create_autocmd({"BufWritePre"}, {
-			--   group = htmlGroup,
-			--   pattern = {"*.html"},
-			--   callback = function()
-			--     vim.lsp.buf.format{
-			--       filter = function(client) return client.name == "html" end
-			--     }
-			--   end,
-			-- })
+			-- local formatterGroup = vim.api.nvim_create_augroup("FormatterOnSave", { clear = true })
+			vim.api.nvim_create_autocmd({ "BufWritePost" }, {
+				group = vim.api.nvim_create_augroup("FormatterOnSave", { clear = true }),
+				command = "FormatWrite",
+			})
 		end,
 	},
 	{
