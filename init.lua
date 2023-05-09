@@ -1,6 +1,8 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 vim.g.autowriteall = "true"
+vim.wo.foldmethod = "indent"
+vim.wo.foldlevel = 99
 local keymap = vim.keymap.set
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
