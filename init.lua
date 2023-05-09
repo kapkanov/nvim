@@ -1,8 +1,16 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 vim.g.autowriteall = "true"
+
 vim.wo.foldmethod = "indent"
 vim.wo.foldlevel = 99
+
+vim.g.relativenumber = true
+vim.wo.relativenumber = true
+
+vim.g.number = true
+vim.wo.number = true
+
 local keymap = vim.keymap.set
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
@@ -19,6 +27,16 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
+	{
+		"lukas-reineke/indent-blankline.nvim",
+		config = function()
+			require("indent_blankline").setup({
+				-- for example, context is off by default, use this to turn it on
+				show_current_context = true,
+				show_current_context_start = true,
+			})
+		end,
+	},
 	{
 		"mhartington/formatter.nvim",
 		config = function()
@@ -540,9 +558,6 @@ vim.o.incsearch = true
 
 vim.opt.scrolloff = 8
 vim.opt.guicursor = ""
-
-vim.opt.relativenumber = true
-vim.wo.number = true
 
 vim.wo.signcolumn = "yes"
 
