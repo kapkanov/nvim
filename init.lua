@@ -1,517 +1,478 @@
 vim.g.mapleader = " "
-vim.g.maplocalleader = ' '
+vim.g.maplocalleader = " "
 vim.g.autowriteall = "true"
 local keymap = vim.keymap.set
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
-  vim.fn.system({
-    "git",
-    "clone",
-    "--filter=blob:none",
-    "https://github.com/folke/lazy.nvim.git",
-    "--branch=stable", -- latest stable release
-    lazypath,
-  })
+	vim.fn.system({
+		"git",
+		"clone",
+		"--filter=blob:none",
+		"https://github.com/folke/lazy.nvim.git",
+		"--branch=stable", -- latest stable release
+		lazypath,
+	})
 end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
-  {
-    "mhartington/formatter.nvim", 
-  config = function ()
-    -- Utilities for creating configurations
-local util = require "formatter.util"
+	{
+		"mhartington/formatter.nvim",
+		config = function()
+			-- Utilities for creating configurations
+			local util = require("formatter.util")
+			local jsBeautify = function(type)
+				return {
+					function()
+						-- Full specification of configurations is down below and in Vim help
+						-- files
+						return {
+							exe = "js-beautify",
+							args = {
+								"--type",
+								type,
+								"--file",
+								util.escape_path(util.get_current_buffer_file_path()),
+							},
+							stdin = true,
+						}
+					end,
+				}
+			end
 
--- Provides the Format, FormatWrite, FormatLock, and FormatWriteLock commands
-require("formatter").setup {
-  -- Enable or disable logging
-  logging = true,
-  -- Set the log level
-  log_level = vim.log.levels.WARN,
-  -- All formatter configurations are opt-in
-  filetype = {
-    css = {
-      function()
-        -- Full specification of configurations is down below and in Vim help
-        -- files
-        return {
-          exe = "js-beautify",
-          args = {
-            "--type",
-            "css",
-            "--file",
-            util.escape_path(util.get_current_buffer_file_path()),
-          },
-          stdin = true,
-        }
-      end
-    },
-    html = {
-      function()
-        return {
-          exe = "js-beautify",
-          args = {
-            "--type",
-            "html",
-            "--file",
-            util.escape_path(util.get_current_buffer_file_path()),
-          },
-          stdin = true,
-        }
-      end
-    },
-    javascript = {
+			local filetypesFormat = {
+				css = jsBeautify("css"),
+				html = jsBeautify("html"),
+				javascript = jsBeautify("js"),
+				lua = {
+					-- "formatter.filetypes.lua" defines default configurations for the
+					-- "lua" filetype
+					require("formatter.filetypes.lua").stylua,
+				},
+				-- Use the special "*" filetype for defining formatter configurations on
+				-- any filetype
+				["*"] = {
+					-- "formatter.filetypes.any" defines default configurations for any
+					-- filetype
+					require("formatter.filetypes.any").remove_trailing_whitespace,
+				},
+			}
 
-      function()
-        return {
-          exe = "js-beautify",
-          args = {
-            "--file",
-            util.escape_path(util.get_current_buffer_file_path()),
-          },
-          stdin = true,
-        }
-      end
-    },
-    -- Formatter configurations for filetype "lua" go here
-    -- and will be executed in order
-    lua = {
-      -- "formatter.filetypes.lua" defines default configurations for the
-      -- "lua" filetype
-      require("formatter.filetypes.lua").stylua,
+			-- Provides the Format, FormatWrite, FormatLock, and FormatWriteLock commands
+			require("formatter").setup({
+				-- Enable or disable logging
+				logging = true,
+				-- Set the log level
+				log_level = vim.log.levels.WARN,
+				-- All formatter configurations are opt-in
+				filetype = filetypesFormat,
+			})
 
-      -- You can also define your own configuration
-      -- function()
-      --   -- Supports conditional formatting
-      --   if util.get_current_buffer_file_name() == "special.lua" then
-      --     return nil
-      --   end
-      --
-      --   -- Full specification of configurations is down below and in Vim help
-      --   -- files
-      --   return {
-      --     exe = "stylua",
-      --     args = {
-      --       "--search-parent-directories",
-      --       "--stdin-filepath",
-      --       util.escape_path(util.get_current_buffer_file_path()),
-      --       "--",
-      --       "-",
-      --     },
-      --     stdin = true,
-      --   }
-      -- end
-    },
+			-- local htmlGroup = vim.api.nvim_create_augroup('FormatHtml', { clear = true })
+			-- vim.api.nvim_create_autocmd({"BufWritePre"}, {
+			--   group = htmlGroup,
+			--   pattern = {"*.html"},
+			--   callback = function()
+			--     vim.lsp.buf.format{
+			--       filter = function(client) return client.name == "html" end
+			--     }
+			--   end,
+			-- })
+		end,
+	},
+	{
+		"iamcco/markdown-preview.nvim",
+		build = function()
+			vim.fn["mkdp#util#install"]()
+		end,
+		config = function()
+			vim.g.mkdp_auto_close = 0
+		end,
+	},
+	{
+		"lewis6991/gitsigns.nvim",
+		opts = {
+			-- See `:help gitsigns.txt`
+			signs = {
+				add = { text = "+" },
+				change = { text = "~" },
+				delete = { text = "_" },
+				topdelete = { text = "‾" },
+				changedelete = { text = "~" },
+			},
+		},
+	},
+	{
+		"tpope/vim-fugitive",
+		config = function()
+			keymap("n", "<leader>gi", ":Git<CR>")
+			keymap("n", "<leader>gl", ":Gclog<CR>")
+		end,
+	},
+	-- {
+	--   "dense-analysis/ale",
+	--   config = function()
+	--     vim.g.ale_fixers = {
+	--       ['*'] = {'remove_trailing_lines', 'trim_whitespace'},
+	--       ['terraform'] = {'terraform'},
+	--     }
+	--     vim.g.ale_fix_on_save = 1
+	--   end,
+	-- },
 
-    -- Use the special "*" filetype for defining formatter configurations on
-    -- any filetype
-    ["*"] = {
-      -- "formatter.filetypes.any" defines default configurations for any
-      -- filetype
-      require("formatter.filetypes.any").remove_trailing_whitespace
-    }
-  }
-}
-    
-  end
-},
-  {
-    "iamcco/markdown-preview.nvim",
-    build = function() vim.fn["mkdp#util#install"]() end,
-    config = function()
-      vim.g.mkdp_auto_close = 0
-    end
-  },
-  {
-    "lewis6991/gitsigns.nvim",
-    opts = {
-      -- See `:help gitsigns.txt`
-      signs = {
-        add = { text = '+' },
-        change = { text = '~' },
-        delete = { text = '_' },
-        topdelete = { text = '‾' },
-        changedelete = { text = '~' },
-      },
-    },
-  },
-  {
-    "tpope/vim-fugitive",
-    config = function()
-      keymap("n", "<leader>gi", ":Git<CR>")
-      keymap("n", "<leader>gl", ":Gclog<CR>")
-    end
-  },
-  -- {
-  --   "dense-analysis/ale",
-  --   config = function()
-  --     vim.g.ale_fixers = {
-  --       ['*'] = {'remove_trailing_lines', 'trim_whitespace'},
-  --       ['terraform'] = {'terraform'},
-  --     }
-  --     vim.g.ale_fix_on_save = 1
-  --   end,
-  -- },
+	{
+		"williamboman/mason.nvim",
+		build = "vim.cmd(':MasonUpdate')", -- :MasonUpdate updates registry contents
+		config = function()
+			require("mason").setup()
+		end,
+	},
 
-  {
-    "williamboman/mason.nvim",
-    build = "vim.cmd(':MasonUpdate')", -- :MasonUpdate updates registry contents
-    config = function()
-      require'mason'.setup()
-    end,
-  },
+	{
+		"williamboman/mason-lspconfig.nvim",
+		dependencies = "williamboman/mason.nvim",
+		config = function()
+			require("mason-lspconfig").setup()
+		end,
+	},
 
-  {
-    "williamboman/mason-lspconfig.nvim",
-    dependencies = "williamboman/mason.nvim",
-    config = function()
-      require'mason-lspconfig'.setup()
-    end,
-  },
+	{
+		"neovim/nvim-lspconfig",
+		dependencies = "williamboman/mason-lspconfig.nvim",
+		config = function()
+			local capabilities = require("cmp_nvim_lsp").default_capabilities()
+			keymap("n", "<leader>df", vim.lsp.buf.definition)
+			keymap("n", "<leader>dc", vim.lsp.buf.declaration)
+			-- keymap("n", '<leader>lf', function()
+			--   print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
+			-- end)
+			--
+			--   require('lspconfig')['<YOUR_LSP_SERVER>'].setup {
+			--     capabilities = capabilities
+			--   }
 
-  {
-    "neovim/nvim-lspconfig",
-    dependencies = "williamboman/mason-lspconfig.nvim",
-    config = function ()
-      local capabilities = require('cmp_nvim_lsp').default_capabilities()
-      keymap("n", "<leader>df", vim.lsp.buf.definition)
-      keymap("n", "<leader>dc", vim.lsp.buf.declaration)
-      -- keymap("n", '<leader>lf', function()
-      --   print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-      -- end)
-      --
-      --   require('lspconfig')['<YOUR_LSP_SERVER>'].setup {
-      --     capabilities = capabilities
-      --   }
+			require("lspconfig").bashls.setup({})
 
-      require'lspconfig'.bashls.setup{}
+			--Enable (broadcasting) snippet capability for completion
+			-- local capabilities = vim.lsp.protocol.make_client_capabilities()
+			-- capabilities.textDocument.completion.completionItem.snippetSupport = true
 
-      --Enable (broadcasting) snippet capability for completion
-      -- local capabilities = vim.lsp.protocol.make_client_capabilities()
-      -- capabilities.textDocument.completion.completionItem.snippetSupport = true
+			require("lspconfig").html.setup({
+				capabilities = capabilities,
+			})
+			-- local htmlGroup = vim.api.nvim_create_augroup('FormatHtml', { clear = true })
+			-- vim.api.nvim_create_autocmd({"BufWritePre"}, {
+			--   group = htmlGroup,
+			--   pattern = {"*.html"},
+			--   callback = function()
+			--     vim.lsp.buf.format{
+			--       filter = function(client) return client.name == "html" end
+			--     }
+			--   end,
+			-- })
 
-      require'lspconfig'.html.setup {
-        capabilities = capabilities,
-      }
-      local htmlGroup = vim.api.nvim_create_augroup('FormatHtml', { clear = true })
-      vim.api.nvim_create_autocmd({"BufWritePre"}, {
-        group = htmlGroup,
-        pattern = {"*.html"},
-        callback = function()
-          vim.lsp.buf.format{
-            filter = function(client) return client.name == "html" end
-          }
-        end,
-      })
+			require("lspconfig").cssls.setup({
+				capabilities = capabilities,
+			})
+			-- local cssGroup = vim.api.nvim_create_augroup('FormatCss', { clear = true })
+			-- vim.api.nvim_create_autocmd({"BufWritePre"}, {
+			--   group = cssGroup,
+			--   pattern = {"*.css"},
+			--   callback = function()
+			--     vim.lsp.buf.format{
+			--       filter = function(client) return client.name == "cssls" end
+			--     }
+			--   end,
+			-- })
 
-      require'lspconfig'.cssls.setup {
-        capabilities = capabilities,
-      }
-      local cssGroup = vim.api.nvim_create_augroup('FormatCss', { clear = true })
-      vim.api.nvim_create_autocmd({"BufWritePre"}, {
-        group = cssGroup,
-        pattern = {"*.css"},
-        callback = function()
-          vim.lsp.buf.format{
-            filter = function(client) return client.name == "cssls" end
-          }
-        end,
-      })
+			require("lspconfig").quick_lint_js.setup({
+				capabilities = capabilities,
+			})
 
+			vim.filetype.add({
+				pattern = {
+					[".*%.github/workflows/.*%.yml"] = "gh-actions",
+					[".*%.github/workflows/.*%.yaml"] = "gh-actions",
+				},
+			})
+			-- require'lspconfig'.actionlint.setup{
+			--   cmd = { "actionlint" },
+			--   filetypes = { "gh-actions" },
+			--   -- root_dir =
+			-- }
 
-      require'lspconfig'.quick_lint_js.setup{
-        capabilities = capabilities,
-      }
+			require("lspconfig").lua_ls.setup({
+				capabilities = capabilities,
+				settings = {
+					Lua = {
+						runtime = {
+							-- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
+							version = "LuaJIT",
+						},
+						diagnostics = {
+							-- Get the language server to recognize the `vim` global
+							globals = { "vim" },
+						},
+						workspace = {
+							-- Make the server aware of Neovim runtime files
+							library = vim.api.nvim_get_runtime_file("", true),
+						},
+						-- Do not send telemetry data containing a randomized but unique identifier
+						telemetry = {
+							enable = false,
+						},
+					},
+				},
+			})
 
-      vim.filetype.add({
-        pattern = {
-          [".*%.github/workflows/.*%.yml"] = "gh-actions",
-          [".*%.github/workflows/.*%.yaml"] = "gh-actions",
-        },
-      })
-      -- require'lspconfig'.actionlint.setup{
-      --   cmd = { "actionlint" },
-      --   filetypes = { "gh-actions" },
-      --   -- root_dir = 
-      -- }
+			-- require'lspconfig'.terraformls.setup{ capabilities = capabilities, }
+			-- vim.api.nvim_create_autocmd({"BufWritePre"}, {
+			--   pattern = {"*.tf", "*.tfvars"},
+			--   callback = function()
+			--     vim.lsp.buf.format{
+			--       filter = function(client) return client.name == "terraformls" end
+			--     }
+			--   end,
+			-- })
 
-      require'lspconfig'.lua_ls.setup {
-        capabilities = capabilities,
-        settings = {
-          Lua = {
-            runtime = {
-              -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
-              version = 'LuaJIT',
-            },
-            diagnostics = {
-              -- Get the language server to recognize the `vim` global
-              globals = {'vim'},
-            },
-            workspace = {
-              -- Make the server aware of Neovim runtime files
-              library = vim.api.nvim_get_runtime_file("", true),
-            },
-            -- Do not send telemetry data containing a randomized but unique identifier
-            telemetry = {
-              enable = false,
-            },
-          },
-        },
-      }
+			require("lspconfig").tflint.setup({})
+		end,
+	},
 
-      require'lspconfig'.terraformls.setup{ capabilities = capabilities, }
-      -- vim.api.nvim_create_autocmd({"BufWritePre"}, {
-      --   pattern = {"*.tf", "*.tfvars"},
-      --   callback = function()
-      --     vim.lsp.buf.format{
-      --       filter = function(client) return client.name == "terraformls" end
-      --     }
-      --   end,
-      -- })
+	{
+		"nvim-treesitter/nvim-treesitter",
+		build = function()
+			vim.cmd(":TSUpdate")
+		end,
+		config = function()
+			require("nvim-treesitter.configs").setup({
+				ensure_installed = {
+					"terraform",
+					"lua",
+					"vim",
+					"vimdoc",
+					"python",
+					"go",
+					"bash",
+					"gitcommit",
+					"java",
+					"json",
+					"make",
+					"regex",
+					"sql",
+					"yaml",
+				},
 
-      require'lspconfig'.tflint.setup{}
+				sync_install = false,
 
-    end,
-  },
+				-- Recommendation: set to false if you don't have `tree-sitter` CLI installed locally
+				auto_install = false,
 
-  {
-    "nvim-treesitter/nvim-treesitter",
-    build = function()
-      vim.cmd(":TSUpdate")
-    end,
-    config = function()
-      require'nvim-treesitter.configs'.setup {
-        ensure_installed = {
-          "terraform",
-          "lua",
-          "vim",
-          "vimdoc",
-          "python",
-          "go",
-          "bash",
-          "gitcommit",
-          "java",
-          "json",
-          "make",
-          "regex",
-          "sql",
-          "yaml",
-        },
+				---- If you need to change the installation directory of the parsers (see -> Advanced Setup)
+				-- parser_install_dir = "/some/path/to/store/parsers", -- Remember to run vim.opt.runtimepath:append("/some/path/to/store/parsers")!
 
-        sync_install = false,
+				highlight = {
+					enable = true,
 
-        -- Recommendation: set to false if you don't have `tree-sitter` CLI installed locally
-        auto_install = false,
+					-- Setting this to true will run `:h syntax` and tree-sitter at the same time.
+					-- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
+					-- Using this option may slow down your editor, and you may see some duplicate highlights.
+					-- Instead of true it can also be a list of languages
+					additional_vim_regex_highlighting = false,
+				},
+			})
+			vim.treesitter.language.add("terraform", { filetype = "terraform-vars" })
+			vim.treesitter.language.add("yaml", { filetype = "gh-actions" })
+		end,
+	},
 
-        ---- If you need to change the installation directory of the parsers (see -> Advanced Setup)
-        -- parser_install_dir = "/some/path/to/store/parsers", -- Remember to run vim.opt.runtimepath:append("/some/path/to/store/parsers")!
+	{
+		"navarasu/onedark.nvim",
+		config = function()
+			require("onedark").setup({
+				style = "warm",
+			})
+			require("onedark").load()
+		end,
+	},
 
-        highlight = {
-          enable = true,
+	{
+		"szw/vim-maximizer",
+		config = keymap("n", "<leader>sm", ":MaximizerToggle<CR>"),
+	},
 
-          -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
-          -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
-          -- Using this option may slow down your editor, and you may see some duplicate highlights.
-          -- Instead of true it can also be a list of languages
-          additional_vim_regex_highlighting = false,
-        },
-      }
-      vim.treesitter.language.add("terraform", { filetype = "terraform-vars" })
-      vim.treesitter.language.add("yaml", { filetype = "gh-actions" })
-    end
-  },
+	"tpope/vim-surround",
 
-  {
-    "navarasu/onedark.nvim",
-    config = function ()
-      require('onedark').setup  {
-        style = 'warm',
-      }
-      require('onedark').load()
-    end
-  },
+	{
+		"numToStr/Comment.nvim",
+		config = function()
+			require("Comment").setup()
+		end,
+	},
 
-  {
-    "szw/vim-maximizer",
-    config = keymap("n", "<leader>sm", ":MaximizerToggle<CR>")
-  },
+	"nvim-lua/plenary.nvim",
 
-  "tpope/vim-surround",
+	{
+		"nvim-neo-tree/neo-tree.nvim",
+		branch = "v2.x",
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"MunifTanjim/nui.nvim",
+		},
+		config = function()
+			vim.g.neo_tree_remove_legacy_commands = 1
+			keymap("n", "<leader>e", ":Neotree toggle reveal left<CR>")
+			-- local neotreeOpen = vim.api.nvim_create_augroup('OpenNeotree', { clear = true })
+			-- vim.api.nvim_create_autocmd({"BufAdd"}, {
+			--   group = htmlGroup,
+			--   pattern = {"*.html"},
+			--   callback = function()
+			--     vim.lsp.buf.format{
+			--       filter = function(client) return client.name == "html" end
+			--     }
+			--   end,
+			-- })
 
-  {
-    "numToStr/Comment.nvim",
-    config = function()
-      require("Comment").setup()
-    end
-  },
+			local htmlGroup = vim.api.nvim_create_augroup("FormatHtml", { clear = true })
+			vim.api.nvim_create_autocmd({ "BufWritePre" }, {
+				group = htmlGroup,
+				pattern = { "*.html" },
+				callback = function()
+					vim.lsp.buf.format({
+						filter = function(client)
+							return client.name == "html"
+						end,
+					})
+				end,
+			})
+		end,
+	},
 
-  "nvim-lua/plenary.nvim",
+	"nvim-tree/nvim-web-devicons",
 
-  {
-    "nvim-neo-tree/neo-tree.nvim",
-    branch = "v2.x",
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "MunifTanjim/nui.nvim",
-    },
-    config = function()
-      vim.g.neo_tree_remove_legacy_commands = 1
-      keymap("n", "<leader>e", ":Neotree toggle reveal left<CR>")
-      -- local neotreeOpen = vim.api.nvim_create_augroup('OpenNeotree', { clear = true })
-      -- vim.api.nvim_create_autocmd({"BufAdd"}, {
-      --   group = htmlGroup,
-      --   pattern = {"*.html"},
-      --   callback = function()
-      --     vim.lsp.buf.format{
-      --       filter = function(client) return client.name == "html" end
-      --     }
-      --   end,
-      -- })
+	{
+		"nvim-lualine/lualine.nvim",
+		opts = {
+			options = {
+				icons_enabled = false,
+				theme = "onedark",
+				component_separators = "|",
+				section_separators = "",
+			},
+		},
+	},
 
-      local htmlGroup = vim.api.nvim_create_augroup('FormatHtml', { clear = true })
-      vim.api.nvim_create_autocmd({"BufWritePre"}, {
-        group = htmlGroup,
-        pattern = {"*.html"},
-        callback = function()
-          vim.lsp.buf.format{
-            filter = function(client) return client.name == "html" end
-          }
-        end,
-      })
-    end
-  },
+	{
+		"nvim-telescope/telescope.nvim",
+		version = "*",
+		dependencies = { "nvim-lua/plenary.nvim" },
+		config = function()
+			keymap("n", "<leader>ff", ":Telescope find_files<cr>")
+			keymap("n", "<leader>lg", ":Telescope live_grep<cr>")
+			keymap("n", "<leader>gf", ":Telescope git_files<cr>")
+			keymap("n", "<leader>gs", ":Telescope grep_string<cr>")
+			keymap("n", "<leader>hh", ":Telescope search_history<cr>")
+			keymap("n", "<leader><leader>", ":Telescope buffers<cr>")
+			keymap("n", "<leader>ht", ":Telescope help_tags<cr>")
+			keymap("n", "<leader>ks", ":Telescope keymaps<cr>")
+			keymap("n", "<leader>di", require("telescope.builtin").diagnostics)
+			keymap("n", "<leader>/", function()
+				require("telescope.builtin").current_buffer_fuzzy_find(require("telescope.themes").get_dropdown({
+					winblend = 10,
+					previewer = false,
+				}))
+			end)
+			-- )
+		end,
+	},
 
-  "nvim-tree/nvim-web-devicons",
+	{
+		"hrsh7th/nvim-cmp",
+		dependencies = {
+			"saadparwaiz1/cmp_luasnip",
+			"L3MON4D3/LuaSnip",
+			"hrsh7th/cmp-nvim-lsp",
+		},
+		--     dependencies = { 'hrsh7th/cmp-nvim-lsp', 'L3MON4D3/LuaSnip', 'saadparwaiz1/cmp_luasnip' },
+		config = function()
+			local cmp = require("cmp")
 
-  {
-    "nvim-lualine/lualine.nvim",
-    opts = {
-      options = {
-        icons_enabled = false,
-        theme = 'onedark',
-        component_separators = '|',
-        section_separators = '',
-      },
-    },
-  },
+			cmp.setup({
+				snippet = {
+					-- REQUIRED - you must specify a snippet engine
+					expand = function(args)
+						require("luasnip").lsp_expand(args.body) -- For `luasnip` users.
+					end,
+				},
+				window = {
+					completion = cmp.config.window.bordered(),
+					documentation = cmp.config.window.bordered(),
+				},
+				mapping = cmp.mapping.preset.insert({
+					["<C-k>"] = cmp.mapping.select_prev_item(),
+					["<C-j>"] = cmp.mapping.select_next_item(),
+					["<C-b>"] = cmp.mapping.scroll_docs(-4),
+					["<C-f>"] = cmp.mapping.scroll_docs(4),
+					["<C-Space>"] = cmp.mapping.complete(),
+					["<C-e>"] = cmp.mapping.abort(),
+					["<CR>"] = cmp.mapping.confirm({ select = true }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
+				}),
+				sources = cmp.config.sources({
+					{ name = "nvim_lsp" },
+					{ name = "luasnip" }, -- For luasnip users.
+				}, {
+					{ name = "buffer" },
+				}, {
+					{ name = "path" },
+				}),
+			})
 
-  {
-    "nvim-telescope/telescope.nvim",
-    version = "*",
-    dependencies = { "nvim-lua/plenary.nvim" },
-    config = function()
-      keymap("n", "<leader>ff", ":Telescope find_files<cr>")
-      keymap("n", "<leader>lg", ":Telescope live_grep<cr>")
-      keymap("n", "<leader>gf", ":Telescope git_files<cr>")
-      keymap("n", "<leader>gs", ":Telescope grep_string<cr>")
-      keymap("n", "<leader>hh", ":Telescope search_history<cr>")
-      keymap("n", "<leader><leader>", ":Telescope buffers<cr>")
-      keymap("n", "<leader>ht", ":Telescope help_tags<cr>")
-      keymap("n", "<leader>ks", ":Telescope keymaps<cr>")
-      keymap('n', '<leader>di', require('telescope.builtin').diagnostics)
-      keymap("n", "<leader>/", function()
-        require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
-          winblend = 10,
-          previewer = false,
-        })
-      end)
-      -- )
-    end,
-  },
+			-- -- Set configuration for specific filetype.
+			-- cmp.setup.filetype('gitcommit', {
+			--   sources = cmp.config.sources({
+			--     { name = 'cmp_git' }, -- You can specify the `cmp_git` source if you were installed it.
+			--   }, {
+			--     { name = 'buffer' },
+			--   })
+			-- })
 
-  {
-    "hrsh7th/nvim-cmp",
-    dependencies = { 
-      "saadparwaiz1/cmp_luasnip",
-      "L3MON4D3/LuaSnip",
-      "hrsh7th/cmp-nvim-lsp",
-    },
---     dependencies = { 'hrsh7th/cmp-nvim-lsp', 'L3MON4D3/LuaSnip', 'saadparwaiz1/cmp_luasnip' },
-    config = function()
-      local cmp = require'cmp'
+			-- Use buffer source for `/` and `?` (if you enabled `native_menu`, this won't work anymore).
+			cmp.setup.cmdline({ "/", "?" }, {
+				mapping = cmp.mapping.preset.cmdline(),
+				sources = {
+					{ name = "buffer" },
+				},
+			})
 
-      cmp.setup({
-        snippet = {
-          -- REQUIRED - you must specify a snippet engine
-          expand = function(args)
-            require'luasnip'.lsp_expand(args.body) -- For `luasnip` users.
-          end,
-        },
-        window = {
-          completion = cmp.config.window.bordered(),
-          documentation = cmp.config.window.bordered(),
-        },
-        mapping = cmp.mapping.preset.insert({
-          ['<C-k>'] = cmp.mapping.select_prev_item(),
-          ['<C-j>'] = cmp.mapping.select_next_item(),
-          ['<C-b>'] = cmp.mapping.scroll_docs(-4),
-          ['<C-f>'] = cmp.mapping.scroll_docs(4),
-          ['<C-Space>'] = cmp.mapping.complete(),
-          ['<C-e>'] = cmp.mapping.abort(),
-          ['<CR>'] = cmp.mapping.confirm({ select = true }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
-        }),
-        sources = cmp.config.sources(
-        {
-          { name = 'nvim_lsp' },
-          { name = 'luasnip' }, -- For luasnip users.
-        },
-        {
-          { name = 'buffer' },
-        },
-        {
-          { name = 'path' },
-        }
-        )
-      })
+			-- Use cmdline & path source for ':' (if you enabled `native_menu`, this won't work anymore).
+			cmp.setup.cmdline(":", {
+				mapping = cmp.mapping.preset.cmdline(),
+				sources = cmp.config.sources({
+					{ name = "path" },
+				}, {
+					{ name = "cmdline" },
+				}),
+			})
 
-      -- -- Set configuration for specific filetype.
-      -- cmp.setup.filetype('gitcommit', {
-      --   sources = cmp.config.sources({
-      --     { name = 'cmp_git' }, -- You can specify the `cmp_git` source if you were installed it.
-      --   }, {
-      --     { name = 'buffer' },
-      --   })
-      -- })
+			vim.opt.completeopt = "menu,menuone,noselect"
+		end,
+	},
 
-      -- Use buffer source for `/` and `?` (if you enabled `native_menu`, this won't work anymore).
-      cmp.setup.cmdline({ '/', '?' }, {
-        mapping = cmp.mapping.preset.cmdline(),
-        sources = {
-          { name = 'buffer' }
-        }
-      })
+	"hrsh7th/cmp-path",
 
-      -- Use cmdline & path source for ':' (if you enabled `native_menu`, this won't work anymore).
-      cmp.setup.cmdline(':', {
-        mapping = cmp.mapping.preset.cmdline(),
-        sources = cmp.config.sources({
-          { name = 'path' }
-        }, {
-          { name = 'cmdline' }
-        })
-      })
+	"hrsh7th/cmp-buffer",
 
-      vim.opt.completeopt = "menu,menuone,noselect"
-
-    end
-  },
-
-  "hrsh7th/cmp-path",
-
-  "hrsh7th/cmp-buffer",
-
-  {
-    "L3MON4D3/LuaSnip",
-    dependencies = {
-      "rafamadriz/friendly-snippets",
-    },
-    config = function()
-      require("luasnip/loaders/from_vscode").lazy_load()
-    end
-  }
+	{
+		"L3MON4D3/LuaSnip",
+		dependencies = {
+			"rafamadriz/friendly-snippets",
+		},
+		config = function()
+			require("luasnip/loaders/from_vscode").lazy_load()
+		end,
+	},
 }, {})
-
 
 -- vim.api.nvim_buf_create_user_command(vim.bufnr, 'Format', function(_)
 --   vim.lsp.buf.format()
@@ -519,13 +480,13 @@ require("formatter").setup {
 
 -- [[ Highlight on yank ]]
 -- See `:help vim.highlight.on_yank()`
-local highlight_group = vim.api.nvim_create_augroup('YankHighlight', { clear = true })
-vim.api.nvim_create_autocmd('TextYankPost', {
-  callback = function()
-    vim.highlight.on_yank()
-  end,
-  group = highlight_group,
-  pattern = '*',
+local highlight_group = vim.api.nvim_create_augroup("YankHighlight", { clear = true })
+vim.api.nvim_create_autocmd("TextYankPost", {
+	callback = function()
+		vim.highlight.on_yank()
+	end,
+	group = highlight_group,
+	pattern = "*",
 })
 
 -- copy to system clipboard
@@ -569,11 +530,11 @@ keymap("n", "<leader>tv", ":bo :vsplit<cr>:term<cr>")
 keymap("n", "<leader>th", ":bo :split<cr>:term<cr>")
 keymap("t", "<Esc>", "<C-\\><C-N>")
 -- keymap("t", "<leader>tx", "<C-\\><C-N>:q<cr>")
-vim.api.nvim_create_autocmd({"TermOpen"}, {
-  callback = function()
-    -- vim.wo.leader('')
-    vim.cmd("startinsert")
-  end
+vim.api.nvim_create_autocmd({ "TermOpen" }, {
+	callback = function()
+		-- vim.wo.leader('')
+		vim.cmd("startinsert")
+	end,
 })
 
 -- Set highlight on search
@@ -586,12 +547,14 @@ vim.opt.guicursor = ""
 vim.opt.relativenumber = true
 vim.wo.number = true
 
-vim.wo.signcolumn = 'yes'
+vim.wo.signcolumn = "yes"
 
 vim.opt.smartindent = true
 
 vim.opt.swapfile = false
 vim.opt.backup = false
+
+-- vim.o.foldmethod = "syntax"
 
 -- require('lazy').setup({
 --   -- NOTE: First, some plugins that don't require any configuration
@@ -659,7 +622,7 @@ vim.opt.backup = false
 --
 --
 -- -- Enable mouse mode
-vim.o.mouse = 'nic'
+vim.o.mouse = "nic"
 --
 -- -- Sync clipboard between OS and Neovim.
 -- --  Remove this option if you want your OS clipboard to remain independent.
@@ -682,7 +645,7 @@ vim.o.smartcase = true
 -- vim.o.timeoutlen = 300
 --
 -- -- Set completeopt to have a better completion experience
-vim.o.completeopt = 'menuone,noselect'
+vim.o.completeopt = "menuone,noselect"
 --
 -- -- NOTE: You should make sure your terminal supports this
 vim.o.termguicolors = true
@@ -705,7 +668,7 @@ vim.o.termguicolors = true
 --
 -- -- Keymaps for better default experience
 -- -- See `:help vim.keymap.set()`
-vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
+vim.keymap.set({ "n", "v" }, "<Space>", "<Nop>", { silent = true })
 --
 -- -- Remap for dealing with word wrap
 -- vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
