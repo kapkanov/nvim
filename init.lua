@@ -28,6 +28,15 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
 	{
+		"sindrets/diffview.nvim",
+		dependencies = "nvim-lua/plenary.nvim",
+		config = function()
+			keymap("n", "<leader>gl", ":DiffviewFileHistory<CR>")
+			keymap("n", "<leader>gd", ":DiffviewOpen<CR>")
+			keymap("n", "<leader>gD", ":DiffviewOpen ")
+		end,
+	},
+	{
 		"lukas-reineke/indent-blankline.nvim",
 		config = function()
 			require("indent_blankline").setup({
