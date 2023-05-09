@@ -18,6 +18,105 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
   {
+    "mhartington/formatter.nvim", 
+  config = function ()
+    -- Utilities for creating configurations
+local util = require "formatter.util"
+
+-- Provides the Format, FormatWrite, FormatLock, and FormatWriteLock commands
+require("formatter").setup {
+  -- Enable or disable logging
+  logging = true,
+  -- Set the log level
+  log_level = vim.log.levels.WARN,
+  -- All formatter configurations are opt-in
+  filetype = {
+    css = {
+      function()
+        -- Full specification of configurations is down below and in Vim help
+        -- files
+        return {
+          exe = "js-beautify",
+          args = {
+            "--type",
+            "css",
+            "--file",
+            util.escape_path(util.get_current_buffer_file_path()),
+          },
+          stdin = true,
+        }
+      end
+    },
+    html = {
+      function()
+        return {
+          exe = "js-beautify",
+          args = {
+            "--type",
+            "html",
+            "--file",
+            util.escape_path(util.get_current_buffer_file_path()),
+          },
+          stdin = true,
+        }
+      end
+    },
+    javascript = {
+
+      function()
+        return {
+          exe = "js-beautify",
+          args = {
+            "--file",
+            util.escape_path(util.get_current_buffer_file_path()),
+          },
+          stdin = true,
+        }
+      end
+    },
+    -- Formatter configurations for filetype "lua" go here
+    -- and will be executed in order
+    lua = {
+      -- "formatter.filetypes.lua" defines default configurations for the
+      -- "lua" filetype
+      require("formatter.filetypes.lua").stylua,
+
+      -- You can also define your own configuration
+      -- function()
+      --   -- Supports conditional formatting
+      --   if util.get_current_buffer_file_name() == "special.lua" then
+      --     return nil
+      --   end
+      --
+      --   -- Full specification of configurations is down below and in Vim help
+      --   -- files
+      --   return {
+      --     exe = "stylua",
+      --     args = {
+      --       "--search-parent-directories",
+      --       "--stdin-filepath",
+      --       util.escape_path(util.get_current_buffer_file_path()),
+      --       "--",
+      --       "-",
+      --     },
+      --     stdin = true,
+      --   }
+      -- end
+    },
+
+    -- Use the special "*" filetype for defining formatter configurations on
+    -- any filetype
+    ["*"] = {
+      -- "formatter.filetypes.any" defines default configurations for any
+      -- filetype
+      require("formatter.filetypes.any").remove_trailing_whitespace
+    }
+  }
+}
+    
+  end
+},
+  {
     "iamcco/markdown-preview.nvim",
     build = function() vim.fn["mkdp#util#install"]() end,
     config = function()
@@ -162,14 +261,14 @@ require("lazy").setup({
       }
 
       require'lspconfig'.terraformls.setup{ capabilities = capabilities, }
-      vim.api.nvim_create_autocmd({"BufWritePre"}, {
-        pattern = {"*.tf", "*.tfvars"},
-        callback = function()
-          vim.lsp.buf.format{
-            filter = function(client) return client.name == "terraformls" end
-          }
-        end,
-      })
+      -- vim.api.nvim_create_autocmd({"BufWritePre"}, {
+      --   pattern = {"*.tf", "*.tfvars"},
+      --   callback = function()
+      --     vim.lsp.buf.format{
+      --       filter = function(client) return client.name == "terraformls" end
+      --     }
+      --   end,
+      -- })
 
       require'lspconfig'.tflint.setup{}
 
@@ -355,8 +454,6 @@ require("lazy").setup({
         sources = cmp.config.sources(
         {
           { name = 'nvim_lsp' },
-        },
-        {
           { name = 'luasnip' }, -- For luasnip users.
         },
         {
