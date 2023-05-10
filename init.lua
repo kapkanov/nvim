@@ -527,6 +527,16 @@ require("lazy").setup({
 			require("luasnip/loaders/from_vscode").lazy_load()
 		end,
 	},
+
+	{
+		"klen/nvim-test",
+		config = function()
+			require("nvim-test").setup()
+			keymap("n", "<leader>ts", ":TestSuite<cr>")
+			keymap("n", "<leader>tf", ":TestFile<cr>")
+			keymap("n", "<leader>tt", ":TestNearest<cr>")
+		end,
+	},
 }, {})
 
 -- vim.api.nvim_buf_create_user_command(vim.bufnr, 'Format', function(_)
