@@ -28,6 +28,18 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
 	{
+		"folke/trouble.nvim",
+		dependencies = "nvim-tree/nvim-web-devicons",
+		config = function()
+			require("trouble").setup({
+				-- your configuration comes here
+				-- or leave it empty to use the default settings
+				-- refer to the configuration section below
+			})
+			keymap("n", "<leader>tr", ":TroubleToggle workspace_diagnostics<cr>")
+		end,
+	},
+	{
 		"kevinhwang91/nvim-ufo",
 		dependencies = "kevinhwang91/promise-async",
 		config = function()
