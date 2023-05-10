@@ -28,6 +28,22 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
 	{
+		"kevinhwang91/nvim-ufo",
+		dependencies = "kevinhwang91/promise-async",
+		config = function()
+			vim.o.foldcolumn = "0" -- '0' is not bad
+			vim.o.foldlevel = 99 -- Using ufo provider need a large value, feel free to decrease the value
+			vim.o.foldlevelstart = 99
+			vim.o.foldenable = true
+
+			-- Using ufo provider need remap `zR` and `zM`. If Neovim is 0.6.1, remap yourself
+			vim.keymap.set("n", "zR", require("ufo").openAllFolds)
+			vim.keymap.set("n", "zM", require("ufo").closeAllFolds)
+
+			require("ufo").setup()
+		end,
+	},
+	{
 		"sindrets/diffview.nvim",
 		dependencies = "nvim-lua/plenary.nvim",
 		config = function()
@@ -166,8 +182,48 @@ require("lazy").setup({
 		dependencies = "williamboman/mason-lspconfig.nvim",
 		config = function()
 			local capabilities = require("cmp_nvim_lsp").default_capabilities()
+
+			capabilities.textDocument.foldingRange = {
+				dynamicRegistration = false,
+				lineFoldingOnly = true,
+			}
+
+			local language_servers = require("lspconfig").util.available_servers() -- or list servers manually like {'gopls', 'clangd'}
+
+			for _, ls in ipairs(language_servers) do
+				require("lspconfig")[ls].setup({
+					capabilities = capabilities,
+					-- you can add other fields for setting up lsp server in this table
+				})
+
+				require("lspconfig").lua_ls.setup({
+					capabilities = capabilities,
+					settings = {
+						Lua = {
+							runtime = {
+								-- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
+								version = "LuaJIT",
+							},
+							diagnostics = {
+								-- Get the language server to recognize the `vim` global
+								globals = { "vim" },
+							},
+							workspace = {
+								-- Make the server aware of Neovim runtime files
+								library = vim.api.nvim_get_runtime_file("", true),
+							},
+							-- Do not send telemetry data containing a randomized but unique identifier
+							telemetry = {
+								enable = false,
+							},
+						},
+					},
+				})
+			end
+
 			keymap("n", "<leader>df", vim.lsp.buf.definition)
 			keymap("n", "<leader>dc", vim.lsp.buf.declaration)
+
 			-- keymap("n", '<leader>lf', function()
 			--   print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
 			-- end)
@@ -176,15 +232,10 @@ require("lazy").setup({
 			--     capabilities = capabilities
 			--   }
 
-			require("lspconfig").bashls.setup({})
-
 			--Enable (broadcasting) snippet capability for completion
 			-- local capabilities = vim.lsp.protocol.make_client_capabilities()
 			-- capabilities.textDocument.completion.completionItem.snippetSupport = true
 
-			require("lspconfig").html.setup({
-				capabilities = capabilities,
-			})
 			-- local htmlGroup = vim.api.nvim_create_augroup('FormatHtml', { clear = true })
 			-- vim.api.nvim_create_autocmd({"BufWritePre"}, {
 			--   group = htmlGroup,
@@ -196,9 +247,6 @@ require("lazy").setup({
 			--   end,
 			-- })
 
-			require("lspconfig").cssls.setup({
-				capabilities = capabilities,
-			})
 			-- local cssGroup = vim.api.nvim_create_augroup('FormatCss', { clear = true })
 			-- vim.api.nvim_create_autocmd({"BufWritePre"}, {
 			--   group = cssGroup,
@@ -209,10 +257,6 @@ require("lazy").setup({
 			--     }
 			--   end,
 			-- })
-
-			require("lspconfig").quick_lint_js.setup({
-				capabilities = capabilities,
-			})
 
 			vim.filetype.add({
 				pattern = {
@@ -226,30 +270,6 @@ require("lazy").setup({
 			--   -- root_dir =
 			-- }
 
-			require("lspconfig").lua_ls.setup({
-				capabilities = capabilities,
-				settings = {
-					Lua = {
-						runtime = {
-							-- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
-							version = "LuaJIT",
-						},
-						diagnostics = {
-							-- Get the language server to recognize the `vim` global
-							globals = { "vim" },
-						},
-						workspace = {
-							-- Make the server aware of Neovim runtime files
-							library = vim.api.nvim_get_runtime_file("", true),
-						},
-						-- Do not send telemetry data containing a randomized but unique identifier
-						telemetry = {
-							enable = false,
-						},
-					},
-				},
-			})
-
 			-- require'lspconfig'.terraformls.setup{ capabilities = capabilities, }
 			-- vim.api.nvim_create_autocmd({"BufWritePre"}, {
 			--   pattern = {"*.tf", "*.tfvars"},
@@ -259,8 +279,6 @@ require("lazy").setup({
 			--     }
 			--   end,
 			-- })
-
-			require("lspconfig").tflint.setup({})
 		end,
 	},
 
