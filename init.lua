@@ -200,9 +200,10 @@ require("lazy").setup({
 				lineFoldingOnly = true,
 			}
 
-			local language_servers = require("lspconfig").util.available_servers() -- or list servers manually like {'gopls', 'clangd'}
+			local language_servers = require("mason-lspconfig").get_installed_servers() -- or list servers manually like {'gopls', 'clangd'}
 
-			for _, ls in ipairs(language_servers) do
+			require("lspconfig").tflint.setup({})
+			for _, ls in pairs(language_servers) do
 				require("lspconfig")[ls].setup({
 					capabilities = capabilities,
 					-- you can add other fields for setting up lsp server in this table
