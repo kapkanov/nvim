@@ -159,7 +159,7 @@ require("lazy").setup({
 		"tpope/vim-fugitive",
 		config = function()
 			keymap("n", "<leader>gi", ":Git<CR>")
-			keymap("n", "<leader>gl", ":Gclog<CR>")
+			keymap("n", "<leader>gL", ":Gclog<CR>")
 		end,
 	},
 	-- {
