@@ -234,8 +234,8 @@ require("lazy").setup({
 				})
 			end
 
-			keymap("n", "<leader>df", vim.lsp.buf.definition)
-			keymap("n", "<leader>dc", vim.lsp.buf.declaration)
+			keymap("n", "<leader>de", vim.lsp.buf.definition)
+			-- keymap("n", "<leader>dc", vim.lsp.buf.declaration)
 
 			-- keymap("n", '<leader>lf', function()
 			--   print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
