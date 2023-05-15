@@ -28,6 +28,12 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
 	{
+		"f-person/git-blame.nvim",
+		config = function()
+			keymap("n", "<leader>gb", ":GitBlameToggle<cr>")
+		end,
+	},
+	{
 		"folke/trouble.nvim",
 		dependencies = "nvim-tree/nvim-web-devicons",
 		config = function()
