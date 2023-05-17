@@ -28,6 +28,12 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
 	{
+		"brenoprata10/nvim-highlight-colors",
+		config = function()
+			require("nvim-highlight-colors").setup()
+		end,
+	},
+	{
 		"f-person/git-blame.nvim",
 		config = function()
 			keymap("n", "<leader>gb", ":GitBlameToggle<cr>")
