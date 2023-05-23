@@ -28,6 +28,14 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
 	{
+		"barrett-ruth/live-server.nvim",
+		config = function()
+			require("live-server").setup()
+			keymap("n", "<leader>ls", ":LiveServerStart<cr>")
+			keymap("n", "<leader>lS", ":LiveServerStop<cr>")
+		end,
+	},
+	{
 		"brenoprata10/nvim-highlight-colors",
 		config = function()
 			require("nvim-highlight-colors").setup()
@@ -259,7 +267,7 @@ require("lazy").setup({
 			end
 
 			keymap("n", "<leader>de", vim.lsp.buf.definition)
-			-- keymap("n", "<leader>dc", vim.lsp.buf.declaration)
+			keymap("n", "<leader>dc", vim.lsp.buf.declaration)
 
 			-- keymap("n", '<leader>lf', function()
 			--   print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
@@ -602,8 +610,8 @@ keymap("n", "<leader>sV", ":bo vsplit<cr>")
 keymap("n", "<leader>se", "<C-w>=")
 keymap("n", "<leader>sq", ":q<CR>")
 keymap("n", "<leader>sQ", ":q!<CR>")
-keymap("n", "<leader>sx", ":bd<CR>")
-keymap("n", "<leader>sX", ":bd!<CR>")
+keymap("n", "<leader>sx", ":bd!<CR>")
+-- keymap("n", "<leader>sX", ":bd!<CR>")
 vim.opt.splitright = true
 vim.splitbelow = true
 
