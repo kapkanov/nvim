@@ -118,7 +118,7 @@ require("lazy").setup({
 				}
 			end
 
-			local filetypesFormat = {
+			local filetypesSettings = {
 				python = {
 					function()
 						return {
@@ -155,13 +155,22 @@ require("lazy").setup({
 				-- Set the log level
 				log_level = vim.log.levels.WARN,
 				-- All formatter configurations are opt-in
-				filetype = filetypesFormat,
+				filetype = filetypesSettings,
 			})
 
 			-- local formatterGroup = vim.api.nvim_create_augroup("FormatterOnSave", { clear = true })
 			vim.api.nvim_create_autocmd({ "BufWritePost" }, {
 				group = vim.api.nvim_create_augroup("FormatterOnSave", { clear = true }),
 				command = "FormatWrite",
+			})
+
+			vim.api.nvim_create_autocmd({ "FileType" }, {
+				pattern = { "yaml", "gh-actions" },
+				callback = function(_)
+					vim.bo.softtabstop = 2
+					vim.bo.shiftwidth = 2
+					vim.bo.expandtab = true
+				end,
 			})
 		end,
 	},
