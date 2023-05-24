@@ -595,6 +595,8 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 	pattern = "*",
 })
 
+keymap("n", "<c-u>", "<c-u>zz")
+keymap("n", "<c-d>", "<c-d>zz")
 -- copy to system clipboard
 keymap("v", "<leader>y", '"+y')
 -- paste from system clipboard
