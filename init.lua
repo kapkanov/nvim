@@ -30,8 +30,19 @@ require("lazy").setup({
 	{
 		"barrett-ruth/live-server.nvim",
 		config = function()
-			require("live-server").setup()
-			keymap("n", "<leader>ls", ":LiveServerStart<cr>")
+			require("live-server").setup({
+				args = { "--port=8080" },
+			})
+
+			keymap("n", "<leader>ls", function()
+				vim.cmd("LiveServerStart")
+				vim.api.nvim_create_autocmd({ "BufDelete" }, {
+					group = vim.api.nvim_create_augroup("StopLiveServer", { clear = true }),
+					buffer = vim.api.nvim_get_current_buf(),
+					command = "LiveServerStop",
+				})
+			end)
+
 			keymap("n", "<leader>lS", ":LiveServerStop<cr>")
 		end,
 	},
