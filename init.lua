@@ -31,7 +31,7 @@ require("lazy").setup({
 		"barrett-ruth/live-server.nvim",
 		config = function()
 			require("live-server").setup({
-				args = { "--port=8080" },
+				args = { "--browser=''", "--port=8080" },
 			})
 
 			keymap("n", "<leader>ls", function()
