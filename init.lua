@@ -27,6 +27,7 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
+	{ "ntpeters/vim-better-whitespace" },
 	{
 		"barrett-ruth/live-server.nvim",
 		config = function()
