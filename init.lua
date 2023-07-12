@@ -1024,3 +1024,6 @@ vim.keymap.set({ "n", "v" }, "<Space>", "<Nop>", { silent = true })
 --
 --
 --
+keymap("n", "<leader>pl", function()
+	require("telescope.builtin").planets({ show_pluto = true, show_moon = true })
+end)
