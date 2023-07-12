@@ -479,7 +479,7 @@ require("lazy").setup({
 			keymap("n", "<leader>ff", ":Telescope find_files<cr>")
 			keymap("n", "<leader>lg", ":Telescope live_grep<cr>")
 			keymap("n", "<leader>gf", ":Telescope git_files<cr>")
-			keymap("n", "<leader>gs", ":Telescope grep_string<cr>")
+			keymap({ "n", "v" }, "<leader>gs", ":Telescope grep_string<cr>")
 			keymap("n", "<leader>hh", ":Telescope search_history<cr>")
 			keymap("n", "<leader><leader>", ":Telescope buffers<cr>")
 			keymap("n", "<leader>ht", ":Telescope help_tags<cr>")
