@@ -739,7 +739,7 @@ vim.opt.backup = false
 --
 --
 -- -- Enable mouse mode
-vim.o.mouse = "nic"
+vim.o.mouse = "n"
 --
 -- -- Sync clipboard between OS and Neovim.
 -- --  Remove this option if you want your OS clipboard to remain independent.
