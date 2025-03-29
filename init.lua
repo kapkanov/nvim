@@ -207,3 +207,15 @@ cmp.setup {
     { name = 'luasnip' },
   },
 }
+
+vim.api.nvim_create_autocmd("TextChangedI", {
+  pattern = "*",
+  callback = function()
+    local line = vim.api.nvim_get_current_line()
+    if line:sub(-1) == "(" then
+      vim.lsp.buf.signature_help()
+    end
+  end
+})
+
+
