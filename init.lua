@@ -43,6 +43,12 @@ vim.keymap.set("n", "N", "Nzz")
 
 vim.keymap.set("t", "<Esc>", "<C-\\><C-N>")
 
+-- -- Copy into clipboard for MacOS
+-- vim.keymap.set("v", "<leader>y", ":w !pbcopy<cr>")
+
+-- Copy into clipboard for Linux
+vim.keymap.set("v", "<leader>y", ":w !xclip -i -sel c<cr>")
+
 vim.api.nvim_create_autocmd({ "TermOpen" }, {
   callback = function()
     -- vim.wo.leader('')
@@ -148,7 +154,7 @@ local lspconfig = require('lspconfig')
 
 -- Enable some language servers with the additional completion capabilities offered by nvim-cmp
 -- local servers = { 'clangd', 'rust_analyzer', 'pyright', 'tsserver' }
-local servers = { "pyright", "ts_ls" }
+local servers = { "pyright", "ts_ls", "terraformls" }
 for _, lsp in ipairs(servers) do
   lspconfig[lsp].setup {
     -- on_attach = my_custom_on_attach,
@@ -218,4 +224,12 @@ vim.api.nvim_create_autocmd("TextChangedI", {
   end
 })
 
+vim.diagnostic.config({
+  virtual_text     = true,
+  signs            = true,
+  update_in_insert = false,
+  underline        = true,
+  severity_sort    = false,
+  float            = true,
+})
 
