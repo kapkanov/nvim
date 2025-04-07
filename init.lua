@@ -97,8 +97,7 @@ require("lazy").setup({
 	  vim.cmd(":TSUpdate")
 	end,
 	config = function()
-	  require("nvim-treesitter.configs").setup{
-	  ensure_installed = {
+	  local ensure = {
 	    "c",
 	    "lua",
 	    "bash",
@@ -116,7 +115,25 @@ require("lazy").setup({
 	    "sql",
 	    "typescript",
 	    "yaml",
-	  },
+	  }
+          local list          = vim.api.nvim_exec("TSInstallInfo", true)
+          local ensure_result = {}
+          local languages     = {}
+          
+          for w in list:gmatch("[^\n]+") do
+            table.insert(languages, w:match("^(%S+)"))
+          end
+          
+          for _, check in ipairs(ensure) do
+            for _, lang in ipairs(languages) do
+              if lang == check then
+                table.insert(ensure_result, lang)
+              end
+            end
+          end
+          
+	  require("nvim-treesitter.configs").setup{
+	  ensure_installed = ensure_result,
 	    sync_install = false,
 
 	    -- Recommendation: set to false if you don't have `tree-sitter` CLI installed locally
