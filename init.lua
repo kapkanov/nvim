@@ -164,6 +164,13 @@ require("lazy").setup({
   },
 }, {})
 
+vim.api.nvim_create_autocmd({"BufEnter", "BufWinEnter"}, {
+  pattern = {"*.tm"},
+  callback = function(_)
+    vim.api.nvim_exec("set ft=terramate", true)
+  end
+})
+
 -- Add additional capabilities supported by nvim-cmp
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
@@ -172,6 +179,20 @@ local lspconfig = require('lspconfig')
 -- Enable some language servers with the additional completion capabilities offered by nvim-cmp
 -- local servers = { 'clangd', 'rust_analyzer', 'pyright', 'tsserver' }
 local servers = {}
+
+if vim.fn.executable("terramate-ls") ~= 0 then
+  local configs = require("lspconfig.configs")
+  configs.terramate_ls = {
+    default_config = {
+      cmd = { "terramate-ls" },
+      filetypes = { "terramate" },
+      root_dir = function(fname)
+        return lspconfig.util.find_git_ancestor(fname) or vim.fn.getcwd()
+      end
+    }
+  }
+  table.insert(servers, "terramate_ls")
+end
 
 if vim.fn.executable("tsc") ~= 0 and vim.fn.executable("typescript-language-server") ~= 0 then
   table.insert(servers, "ts_ls")
