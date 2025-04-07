@@ -171,7 +171,16 @@ local lspconfig = require('lspconfig')
 
 -- Enable some language servers with the additional completion capabilities offered by nvim-cmp
 -- local servers = { 'clangd', 'rust_analyzer', 'pyright', 'tsserver' }
-local servers = { "pyright", "ts_ls", "terraformls" }
+local servers = {}
+
+if vim.fn.executable("tsc") ~= 0 and vim.fn.executable("typescript-language-server") ~= 0 then
+  table.insert(servers, "ts_ls")
+end
+
+if vim.fn.executable("pyright") ~= 0 then
+  table.insert(servers, "pyright")
+end
+
 for _, lsp in ipairs(servers) do
   lspconfig[lsp].setup {
     -- on_attach = my_custom_on_attach,
