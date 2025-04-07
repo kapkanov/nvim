@@ -202,6 +202,10 @@ if vim.fn.executable("pyright") ~= 0 then
   table.insert(servers, "pyright")
 end
 
+if vim.fn.executable("gopls") ~= 0 then
+  table.insert(servers, "gopls")
+end
+
 for _, lsp in ipairs(servers) do
   lspconfig[lsp].setup {
     -- on_attach = my_custom_on_attach,
