@@ -180,7 +180,15 @@ local lspconfig = require('lspconfig')
 
 -- Enable some language servers with the additional completion capabilities offered by nvim-cmp
 -- local servers = { 'clangd', 'rust_analyzer', 'pyright', 'tsserver' }
-local servers = {}
+local servers = {
+  {
+    "ts_ls",
+    dependencies = { "tsc", "typescript-language-server" }
+  },
+  "pyright",
+  "gopls",
+  "jdtls",
+}
 
 if vim.fn.executable("terramate-ls") ~= 0 then
   local configs = require("lspconfig.configs")
@@ -193,30 +201,28 @@ if vim.fn.executable("terramate-ls") ~= 0 then
       end
     }
   }
-  table.insert(servers, "terramate_ls")
-end
-
-if vim.fn.executable("tsc") ~= 0 and vim.fn.executable("typescript-language-server") ~= 0 then
-  table.insert(servers, "ts_ls")
-end
-
-if vim.fn.executable("pyright") ~= 0 then
-  table.insert(servers, "pyright")
-end
-
-if vim.fn.executable("gopls") ~= 0 then
-  table.insert(servers, "gopls")
-end
-
-if vim.fn.executable("jdtls") ~= 0 then
-  table.insert(servers, "jdtls")
+  table.insert(servers, {"terramate_ls", dependencies = {"terramate-ls"}})
 end
 
 for _, lsp in ipairs(servers) do
-  lspconfig[lsp].setup {
-    -- on_attach = my_custom_on_attach,
-    capabilities = capabilities,
-  }
+  local lsname
+  local installed = true
+
+  if type(lsp) ~= "table" then
+    lsname    = lsp
+    installed = vim.fn.executable(lsp) ~= 0
+  else
+    lsname = lsp[1]
+    for _, dependency in ipairs(lsp.dependencies) do
+      installed = installed and vim.fn.executable(dependency) ~= 0
+    end
+  end
+
+  if installed then
+    lspconfig[lsname].setup {
+      capabilities = capabilities,
+    }
+  end
 end
 
 -- luasnip setup
