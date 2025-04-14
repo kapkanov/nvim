@@ -205,17 +205,13 @@ if vim.fn.executable("terramate-ls") ~= 0 then
 end
 
 for _, lsp in ipairs(servers) do
-  local lsname
-  local installed = true
+  local lsname       = lsp[1] or lsp
+  local dependencies = lsp.dependencies or { lsp }
+  local installed    = true
 
-  if type(lsp) ~= "table" then
-    lsname    = lsp
-    installed = vim.fn.executable(lsp) ~= 0
-  else
-    lsname = lsp[1]
-    for _, dependency in ipairs(lsp.dependencies) do
-      installed = installed and vim.fn.executable(dependency) ~= 0
-    end
+  for _, dependency in ipairs(dependencies) do
+    dependency = dependency[1] or dependency
+    installed  = installed and vim.fn.executable(dependency) ~= 0
   end
 
   if installed then
