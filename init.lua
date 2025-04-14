@@ -43,11 +43,13 @@ vim.keymap.set("n", "N", "Nzz")
 
 vim.keymap.set("t", "<Esc>", "<C-\\><C-N>")
 
--- -- Copy into clipboard for MacOS
--- vim.keymap.set("v", "<leader>y", ":w !pbcopy<cr>")
+if vim.fn.executable("pbcopy") ~= 0 then
+  vim.keymap.set("v", "<leader>y", ":w !pbcopy<cr><cr>")
+end
 
--- Copy into clipboard for Linux
-vim.keymap.set("v", "<leader>y", ":w !xclip -i -sel c<cr>")
+if vim.fn.executable("xclip") ~= 0 then
+  vim.keymap.set("v", "<leader>y", ":w !xclip -i -sel c<cr><cr>")
+end
 
 vim.api.nvim_create_autocmd({ "TermOpen" }, {
   callback = function()
