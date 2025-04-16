@@ -188,6 +188,7 @@ local servers = {
   "pyright",
   "gopls",
   "jdtls",
+  "clangd",
 }
 
 if vim.fn.executable("terramate-ls") ~= 0 then
