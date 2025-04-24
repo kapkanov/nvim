@@ -293,3 +293,5 @@ vim.diagnostic.config({
   float            = true,
 })
 
+vim.keymap.set("n", "<leader>er", vim.diagnostic.open_float)
+
