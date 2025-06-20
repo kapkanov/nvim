@@ -295,3 +295,13 @@ vim.diagnostic.config({
 
 vim.keymap.set("n", "<leader>er", vim.diagnostic.open_float)
 
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "java",
+  callback = function()
+    vim.bo.shiftwidth = 4    -- Number of spaces for each indentation level
+    vim.bo.tabstop = 4       -- Number of spaces that a <Tab> in the file counts for
+    vim.bo.softtabstop = 4   -- Number of spaces a <Tab> counts for while editing
+    vim.bo.expandtab = true  -- Use spaces instead of tabs
+  end,
+})
+
