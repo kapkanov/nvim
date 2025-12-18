@@ -63,9 +63,6 @@ vim.api.nvim_create_autocmd("TextYankPost", {
   pattern = "*",
 })
 
-require("onedark").setup({ style = "warm" })
-require("onedark").load()
-
 require("telescope").setup()
 
 vim.keymap.set('n', '<leader>ff', require("telescope.builtin").find_files, {
@@ -104,6 +101,10 @@ vim.keymap.set('n', '<leader>o', ":Oil<CR>")
 vim.keymap.set('n', '<leader>.', require("oil").toggle_hidden, {})
 
 vim.lsp.enable("ada_ls")
+vim.lsp.enable("yamlls")
+
+vim.api.nvim_set_hl(0, "yamlBlockMappingKey", { link = "Keyword" })
+
 
 require("mini.completion").setup()
 
@@ -144,6 +145,7 @@ vim.keymap.set('i', '<C-J>', function()
   end
 end, map_opts)
 
+
 vim.api.nvim_create_autocmd("FileType", {
   pattern  = "*",
   callback = function()
@@ -162,4 +164,7 @@ vim.api.nvim_create_autocmd("FileType", {
     end
   end,
 })
+
+
+vim.cmd.colorscheme("gruber-darker")
 
